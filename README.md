@@ -8,5 +8,6 @@ A repository of code that interacts with the polygon.io API
 
 ### minute_stream.py
 This code streams aggregated minutely bars for all stocks available on Polygon.
-WIP: Built-in internet outage handling
+
+- WIP: Build internet outage handling
 
