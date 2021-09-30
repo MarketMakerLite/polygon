@@ -1,4 +1,4 @@
-# MML-Polygon
+# Market Maker Lite Polygon Repository
 [![Python Badge](https://img.shields.io/badge/made%20with-python-blue.svg)]()
 [![GitHub license](https://badgen.net/github/license/MarketMakerLite/polygon)](https://github.com/MarketMakerLite/polygon/blob/master/LICENSE)
 [![GitHub last commit](https://img.shields.io/github/last-commit/MarketMakerLite/polygon)](https://github.com/MarketMakerLite/polygon/commits/main)
