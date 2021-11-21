@@ -7,7 +7,7 @@
 A repository of code that interacts with the [Polygon API by pssolanki111](https://github.com/pssolanki111/polygon)
 
 ## Websockets
-The stream files send data to a redis, which is then consumed through the listener script - saving the data in chunks to a postgres database. 
+The websocket files send data to a Redis list, which is then consumed through the listener script - saving the data in chunks to a postgres database. 
 
 ### crypto_stream.py
 This script streams aggregated minutely bars for all crypto pairs available on Polygon. This data is fed to a Redis list to be consumed by the listener script. 
