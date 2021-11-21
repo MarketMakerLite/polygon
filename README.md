@@ -4,7 +4,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/MarketMakerLite/polygon)](https://github.com/MarketMakerLite/polygon/commits/main)
 [![Discord](https://img.shields.io/discord/837528551028817930?color=%237289DA&label=Discord)](https://discord.gg/jjDcZcqXWy)
 
-A repository of code that interacts with the polygon.io API 
+A repository of code that interacts with the [Polygon API](https://github.com/pssolanki111/polygon) by pssolanki111
 
 ## Websockets
 The stream files send data to a redis, which is then consumed through the listener script - saving the data in chunks to a postgres database. 
