@@ -6,8 +6,17 @@
 
 A repository of code that interacts with the polygon.io API 
 
-### minute_stream.py
-This code streams aggregated minutely bars for all stocks available on Polygon.
+## Websockets
+The stream files send data to a redis, which is then consumed through the listener script - saving the data in chunks to a postgres database. 
 
-- WIP: Build internet outage handling
+### crypto_stream.py
+This script streams aggregated minutely bars for all crypto pairs available on Polygon. This data is fed to a Redis list to be consumed by the listener script. 
 
+### options_stream.py
+This script streams options trades for all options available on Polygon. This data is fed to a Redis list to be consumed by the listener script. 
+
+### stock_stream.py
+This script streams aggregated seconds for all stocks available on Polygon. This data is fed to a Redis list to be consumed by the listener script. 
+
+### stream_listener.py
+This script listens and consumes the Redis lists created by the streaming scripts. 
