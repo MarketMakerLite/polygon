@@ -57,7 +57,8 @@ def save_data(message):
     if key_count > len(keys.keys())+1:
         message = [{k: single[k] for k in keys if k in single} for single in message]
         print('New fields detected! Check API documentation: https://polygon.io/docs/websockets/ws_options_T_anchor')
-
+    else:
+        del message['ev']
     new_message = []
     for d in message:
         # del d['ev']  # delete status
