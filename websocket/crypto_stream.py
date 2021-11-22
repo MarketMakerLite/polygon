@@ -48,7 +48,7 @@ def save_data(message):
 
     new_message = []
     for d in message:
-        del d['ev']  # delete status
+        # del d['ev']  # delete status
         d = {keys[name]: val for name, val in d.items()}
         d['tdate'] = unix_convert(d['time_end'])
         d['save_date'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
