@@ -47,7 +47,7 @@ def save_data(message):
         message = [{k: single[k] for k in keys if k in single} for single in message]
         print('New fields detected! Check API documentation: https://polygon.io/docs/websockets/')
     else: 
-        del d['ev']
+        message = [{k: single[k] for k in keys if k in single} for single in message]
 
     new_message = []
     for d in message:
