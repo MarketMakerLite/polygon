@@ -42,7 +42,7 @@ def save_data(message):
 
     # Drop Unknown Keys
     key_count = len(message[0].keys())
-    if key_count > len(keys.keys()):
+    if key_count > len(keys.keys())+1:
         message = [{k: single[k] for k in keys if k in single} for single in message]
         print('New fields detected! Check API documentation: https://polygon.io/docs/websockets/')
 
