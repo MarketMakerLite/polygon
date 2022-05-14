@@ -77,12 +77,15 @@ async def main():
     print(f"Getting data for {len(symbols)} symbols")
     times_list = []
     for ticker in symbols:
-        t = time.time()
-        df = await get_ticker_data(ticker)
-        # Save to database
-        sql_fun(df)
-        times_list.append(time.time() - t)
-        print(ticker, (sum(times_list) / len(times_list)))  # Time it
+        try:
+            t = time.time()
+            df = await get_ticker_data(ticker)
+            # Save to database
+            sql_fun(df)
+            times_list.append(time.time() - t)
+            print(ticker, (sum(times_list) / len(times_list)))  # Time it
+        except Exception:
+            pass
 
 if __name__ == '__main__':
     import asyncio
