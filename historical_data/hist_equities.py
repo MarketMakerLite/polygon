@@ -53,7 +53,6 @@ async def get_ticker_data(ticker: str):
     df.drop('a', axis=1, inplace=True)
     df.drop('n', axis=1, inplace=True)
     df.columns = ['tick_volume', 'tick_vwap', 'tick_open', 'tick_close', 'tick_high', 'tick_low', 'time_end', 'opening_price']
-    df.insert(0, 'symbol', ticker)
     df['symbol'] = ticker
     df['total_volume'] = None
     df['vwap'] = None
