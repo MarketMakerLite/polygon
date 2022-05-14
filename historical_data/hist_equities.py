@@ -54,10 +54,11 @@ async def get_ticker_data(ticker: str):
     df.drop('n', axis=1, inplace=True)
     df.columns = ['tick_volume', 'tick_vwap', 'tick_open', 'tick_close', 'tick_high', 'tick_low', 'time_end', 'opening_price']
     df.insert(0, 'symbol', ticker)
-    df.insert(3, 'total_volume', None)
-    df.insert(3, 'vwap', None)
-    df.insert(3, 'avg_trade_size', None)
-    df.insert(3, 'time_beg', None)
+    df['symbol'] = ticker
+    df['total_volume'] = None
+    df['vwap'] = None
+    df['avg_trade_size'] = None
+    df['time_beg'] = None
     df['tick_volume'] = df['tick_volume'].astype('int')
     df['tdate'] = df['time_end'].map(lambda x: unix_convert(x))
     df['save_date'] = datetime.utcnow()
