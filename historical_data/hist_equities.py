@@ -75,12 +75,14 @@ def prep_database():
 
 async def main():
     print(f"Getting data for {len(symbols)} symbols")
+    times_list = []
     for ticker in symbols:
         t = time.time()
         df = await get_ticker_data(ticker)
         # Save to database
         sql_fun(df)
-        print(ticker, time.time() - t)  # Time it
+        times_list.append(time.time() - t)
+        print(ticker, (sum(times_list) / len(times_list)))  # Time it
 
 if __name__ == '__main__':
     import asyncio
