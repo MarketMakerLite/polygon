@@ -69,7 +69,6 @@ async def main(symbol_list, stocks_client):
             with engine.connect() as conn:
                 conn.execute(clear_data)
             sql_fun(df)
-            print(df)
         except Exception as e:
             print(e)
             pass
