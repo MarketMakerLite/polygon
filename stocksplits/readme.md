@@ -1,3 +1,5 @@
+#Polygon Stock Splits
+
 This script is designed to be run via CronTab or similar scheduling program in order to maintain an existing database of stock data (in this case, 1 minute aggregates).
 
 The core design is as follows:
