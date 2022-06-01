@@ -65,10 +65,10 @@ async def main(symbol_list, stocks_client):
         try:
             df = await get_ticker_data(ticker, stocks_client)
             # Save to database
-            # clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
-            # with engine.connect() as conn:
-            #     conn.execute(clear_data)
-            # sql_fun(df)
+            clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
+            with engine.connect() as conn:
+                conn.execute(clear_data)
+            sql_fun(df)
             print(df)
         except Exception as e:
             print(e)
