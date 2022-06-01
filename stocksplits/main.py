@@ -106,5 +106,5 @@ if __name__ == '__main__':
     print(splits_list)
     reference_client.close()
     stocks_client = StocksClient(config.polygon_key, True)
-    asyncio.run(main(splits_list, stocks_client))
+    asyncio.run(main(splits_list))
     stocks_client.close()
