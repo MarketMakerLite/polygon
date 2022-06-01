@@ -32,7 +32,8 @@ def sql_fun(df):
 
 async def get_ticker_data(ticker, stocks_client):
     # Make API Call
-    resp = await stocks_client.get_aggregate_bars(ticker, '2005-01-01', '2022-05-10', full_range=True, timespan='minute',
+    today = datetime.today().date()
+    resp = await stocks_client.get_aggregate_bars(ticker, '2005-01-01', today, full_range=True, timespan='minute',
                                                   high_volatility=True, warnings=False, adjusted=True)
     df = pd.DataFrame.from_dict(resp)
     # Formatting
