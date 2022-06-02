@@ -78,15 +78,17 @@ async def main(symbol_list):
 
 def stock_splits(symbol_list):
     splits_list = []
-    execution_date = datetime.today().date()
-    print(execution_date)
+    execution_date = datetime.today().date()  # Check for splits since this date
     for ticker in symbol_list:
-        print(f"Checking for splits: {ticker}")
-        resp = reference_client.get_stock_splits(ticker, all_pages=True, execution_date=execution_date)
+        print(f"Checking {ticker} for splits since {execution_date}")
+        resp = reference_client.get_stock_splits(ticker, all_pages=True)
         if resp:
             if resp[0]['ticker']:
-                splits_list.append(resp[0]['ticker'])
-                print(splits_list)
+                for split in resp:
+                    split_date = datetime.strptime(split['execution_date'], "%Y-%m-%d").date()
+                    if datetime.today().date() >= split_date >= execution_date:
+                        splits_list.append(resp[0]['ticker'])
+                        print(splits_list)
     return splits_list
 
 
