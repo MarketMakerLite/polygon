@@ -65,12 +65,52 @@ async def main(symbol_list):
         print(f"Getting data for {ticker}")
         try:
             df = await get_ticker_data(ticker)
-            Save to database
-            clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
+            # Save to database
+            # -----------------IF YOU AREN'T USING TIMESCALE W/ COMPRESSION USE THIS CODE-------------------------------
+            # print('Dropping existing data from table')
+            # clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
+            # with engine.connect() as conn:
+            #     conn.execute(clear_data)
+            # print('Adding new data to table')
+            # sql_fun(df)
+            # print(f'Successfully updated {ticker}')
+            # ----------------------------------------------------------------------------------------------------------
+            # -----------------IF USING TIMESCALE W/ COMPRESSION USE THIS CODE------------------------------------------
+            print('Dropping existing data from table')
+            # Get compression Job ID
+            job_id = pd.read_sql_query(f"""SELECT s.job_id
+                                               FROM timescaledb_information.jobs j
+                                               INNER JOIN timescaledb_information.job_stats s ON j.job_id = s.job_id
+                                               WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = 'stockdata_hist_old'; """,
+                                       con=engine)
+            job_id = job_id['job_id'][0]
+            # Turn off compression (Job ID from previous step)
+            print('Turning off Compression Policy')
+            turn_off_compression = text(f"""SELECT alter_job({job_id}, scheduled => false);""")
             with engine.connect() as conn:
-                 conn.execute(clear_data)
+                conn.execute(turn_off_compression)
+            print(f'Decompressing Data for {ticker}')
+            get_chunk_ids = pd.read_sql_query(
+                f"""SELECT tableoid::regclass FROM stockdata_hist_old WHERE symbol = '{ticker}' GROUP BY tableoid; """,
+                con=engine)
+            chunk_ids = get_chunk_ids['tableoid'].to_list()
+            for chunk_id in chunk_ids:
+                decompress_chunks = text(f"""SELECT decompress_chunk('{chunk_id}');""")
+                with engine.connect() as conn:
+                    conn.execute(decompress_chunks)
+            # Add new data
+            print('Adding new data to table')
             sql_fun(df)
-            print(df)
+            # Restart compression
+            print('Restarting compression policy')
+            restart_compression = text(f"""SELECT alter_job({job_id}, scheduled => true);""")
+            run_compression = text(f"""CALL run_job({job_id});""")
+            with engine.connect() as conn:
+                conn.execute(restart_compression)
+                conn.execute(run_compression)
+            print(f'Successfully updated {ticker}')
+            # ----------------------------------------------------------------------------------------------------------
+
         except Exception as e:
             print(e)
             pass
@@ -78,7 +118,7 @@ async def main(symbol_list):
 
 def stock_splits(symbol_list):
     splits_list = []
-    execution_date = datetime.today().date()  # Check for splits since this date
+    execution_date = datetime(2022, 5, 10).date()
     for ticker in symbol_list:
         print(f"Checking {ticker} for splits since {execution_date}")
         resp = reference_client.get_stock_splits(ticker, all_pages=True)
@@ -93,6 +133,7 @@ def stock_splits(symbol_list):
 
 
 if __name__ == '__main__':
+    start = time.time()
     # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # Unix only
     engine = create_engine(config.psql)
     postgreSQL_pool = psycopg2.pool.ThreadedConnectionPool(5, 50, host=config.psql_host, database=config.psql_db,
@@ -100,13 +141,13 @@ if __name__ == '__main__':
     reference_client = polygon.ReferenceClient(config.polygon_key, False, read_timeout=60)
     symbols_df = pd.read_sql_query('select ticker from companies where active = true', con=engine)
     symbols = symbols_df['ticker'].to_list()
-    # symbols = ['FAMI', 'YINN', 'ERY', 'CWEB', 'BQ']  # Example List
     stock_cols = ['symbol', 'tick_volume', 'total_volume', 'opening_price', 'tick_vwap', 'tick_open', 'tick_close',
                   'tick_high', 'tick_low', 'vwap', 'avg_trade_size', 'time_beg', 'time_end', 'tdate', 'save_date']
-    
+    # symbols = ['BAOS', 'BEST', 'BHAT', 'BQ', 'BRW', 'BZQ', 'CIG', 'CIG.C', 'CM', 'CWEB', 'DIG', 'ERY', 'EVOK', 'FAMI', 'FENG', 'HIVE', 'HIVE', 'KOLD', 'LEJU', 'MKD', 'PT', 'PTE', 'PXS', 'RMTI', 'SAL', 'SCC', 'SCO', 'SRGA', 'SXTC', 'TNXP', 'UCO', 'UYM', 'YCS', 'YINN']
     splits_list = stock_splits(symbols)
     print(splits_list)
     reference_client.close()
+    print("Time:", (time.time()-start))
     stocks_client = StocksClient(config.polygon_key, True)
     asyncio.run(main(splits_list))
     stocks_client.close()
