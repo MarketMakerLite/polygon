@@ -7,3 +7,5 @@ The core design is as follows:
 * Download new, adjusted historical data from polygon
 * Delete existing data from database
 * Write new data to database
+
+Note: Use the timescale.py file if you're table is compressed with TimescaleDB, otherwise use the main.py file
