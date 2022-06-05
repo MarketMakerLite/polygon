@@ -65,7 +65,7 @@ async def main(symbol_list):
     job_id = pd.read_sql_query(f"""SELECT s.job_id
                                        FROM timescaledb_information.jobs j
                                        INNER JOIN timescaledb_information.job_stats s ON j.job_id = s.job_id
-                                       WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = 'stockdata_hist_old'; """,
+                                       WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = 'stockdata_hist'; """,
                                con=engine)
     job_id = job_id['job_id'][0]
     # Turn off compression (Job ID from previous step)
@@ -80,7 +80,7 @@ async def main(symbol_list):
             # Save to database
             print(f'Decompressing Data for {ticker}')
             get_chunk_ids = pd.read_sql_query(
-                f"""SELECT tableoid::regclass FROM stockdata_hist_old WHERE symbol = '{ticker}' GROUP BY tableoid; """,
+                f"""SELECT tableoid::regclass FROM stockdata_hist WHERE symbol = '{ticker}' GROUP BY tableoid; """,
                 con=engine)
             chunk_ids = get_chunk_ids['tableoid'].to_list()
             for chunk_id in chunk_ids:
