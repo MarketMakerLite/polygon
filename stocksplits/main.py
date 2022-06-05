@@ -66,51 +66,13 @@ async def main(symbol_list):
         try:
             df = await get_ticker_data(ticker)
             # Save to database
-            # -----------------IF YOU AREN'T USING TIMESCALE W/ COMPRESSION USE THIS CODE-------------------------------
-            # print('Dropping existing data from table')
-            # clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
-            # with engine.connect() as conn:
-            #     conn.execute(clear_data)
-            # print('Adding new data to table')
-            # sql_fun(df)
-            # print(f'Successfully updated {ticker}')
-            # ----------------------------------------------------------------------------------------------------------
-            # -----------------IF USING TIMESCALE W/ COMPRESSION USE THIS CODE------------------------------------------
             print('Dropping existing data from table')
-            # Get compression Job ID
-            job_id = pd.read_sql_query(f"""SELECT s.job_id
-                                               FROM timescaledb_information.jobs j
-                                               INNER JOIN timescaledb_information.job_stats s ON j.job_id = s.job_id
-                                               WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = 'stockdata_hist_old'; """,
-                                       con=engine)
-            job_id = job_id['job_id'][0]
-            # Turn off compression (Job ID from previous step)
-            print('Turning off Compression Policy')
-            turn_off_compression = text(f"""SELECT alter_job({job_id}, scheduled => false);""")
+            clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
             with engine.connect() as conn:
-                conn.execute(turn_off_compression)
-            print(f'Decompressing Data for {ticker}')
-            get_chunk_ids = pd.read_sql_query(
-                f"""SELECT tableoid::regclass FROM stockdata_hist_old WHERE symbol = '{ticker}' GROUP BY tableoid; """,
-                con=engine)
-            chunk_ids = get_chunk_ids['tableoid'].to_list()
-            for chunk_id in chunk_ids:
-                decompress_chunks = text(f"""SELECT decompress_chunk('{chunk_id}');""")
-                with engine.connect() as conn:
-                    conn.execute(decompress_chunks)
-            # Add new data
+                conn.execute(clear_data)
             print('Adding new data to table')
             sql_fun(df)
-            # Restart compression
-            print('Restarting compression policy')
-            restart_compression = text(f"""SELECT alter_job({job_id}, scheduled => true);""")
-            run_compression = text(f"""CALL run_job({job_id});""")
-            with engine.connect() as conn:
-                conn.execute(restart_compression)
-                conn.execute(run_compression)
             print(f'Successfully updated {ticker}')
-            # ----------------------------------------------------------------------------------------------------------
-
         except Exception as e:
             print(e)
             pass
