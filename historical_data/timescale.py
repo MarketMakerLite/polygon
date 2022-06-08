@@ -105,7 +105,7 @@ async def main():
             sql_fun(df)
             times_list.append(time.time() - t)
             print(ticker, (sum(times_list) / len(times_list)))  # Time it
-            if counter % 1000 == 0:  # Compress every 1,000 tickers, roughly 400gb for the full history
+            if counter % 1000 == 0:  # Compress every 1,000 tickers, roughly 400gb before compression
                 print('Running compression')
                 conn = postgreSQL_pool.getconn()
                 conn.autocommit = True
