@@ -86,7 +86,8 @@ async def main():
     counter = 0
     times_list = []
     table_name = 'stockdata_hist'
-    job_id = pd.read_sql_query(f"""SELECT s.job_id  # Get compression policy job id (https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/about-compression)
+    # Get compression policy job id (https://docs.timescale.com/timescaledb/latest/how-to-guides/compression/about-compression)
+    job_id = pd.read_sql_query(f"""SELECT s.job_id  
             FROM timescaledb_information.jobs j
             INNER JOIN timescaledb_information.job_stats s ON j.job_id = s.job_id
             WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = '{table_name}'; """, con=engine)
