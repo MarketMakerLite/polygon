@@ -33,7 +33,7 @@ def sql_fun(df):
 async def get_ticker_data(ticker):
     # Make API Call
     today = datetime.today().date()
-    resp = await stocks_client.get_aggregate_bars(ticker, '2005-01-01', today, full_range=True, timespan='minute',
+    resp = await stocks_client.get_aggregate_bars(ticker, '2001-01-01', today, full_range=True, timespan='minute',
                                                   high_volatility=True, warnings=False, adjusted=True)
     df = pd.DataFrame.from_dict(resp)
     # Formatting
@@ -77,24 +77,32 @@ async def main(symbol_list):
         print(f"Getting data for {ticker}")
         try:
             df = await get_ticker_data(ticker)
-            # Save to database
-            print(f'Decompressing Data for {ticker}')
-            get_chunk_ids = pd.read_sql_query(
-                f"""SELECT tableoid::regclass FROM stockdata_hist WHERE symbol = '{ticker}' GROUP BY tableoid; """,
-                con=engine)
-            chunk_ids = get_chunk_ids['tableoid'].to_list()
-            for chunk_id in chunk_ids:
-                decompress_chunks = text(f"""SELECT decompress_chunk('{chunk_id}');""")
-                with engine.connect() as conn:
-                    conn.execute(decompress_chunks)
+            try:
+                # Save to database
+                print(f'Decompressing Data for {ticker}')
+                get_chunk_ids = pd.read_sql_query(
+                    f"""SELECT tableoid::regclass FROM stockdata_hist WHERE symbol = '{ticker}' GROUP BY tableoid; """,
+                    con=engine)
+                chunk_ids = get_chunk_ids['tableoid'].to_list()
+                for chunk_id in chunk_ids:
+                    decompress_chunks = text(f"""SELECT decompress_chunk('{chunk_id}');""")
+                    with engine.connect() as conn:
+                        conn.execute(decompress_chunks)
+            except Exception as e:
+                # In case chunk is not compressed - (psycopg2.errors.ObjectNotInPrerequisiteState) chunk is not compressed
+                print(e)
+            print('Dropping existing data from table')
+            clear_data = text(f"""DELETE FROM stockdata_hist WHERE symbol = '{ticker}';""")
+            with engine.connect() as conn:
+                conn.execute(clear_data)
             # Add new data
             print('Adding new data to table')
             sql_fun(df)
-            # Restart compression
             print(f'Successfully updated {ticker}')
         except Exception as e:
             print(e)
             pass
+    # Restart compression
     print('Restarting compression policy')
     restart_compression = text(f"""SELECT alter_job({job_id}, scheduled => true);""")
     run_compression = text(f"""CALL run_job({job_id});""")
@@ -106,7 +114,7 @@ async def main(symbol_list):
 
 def stock_splits(symbol_list):
     splits_list = []
-    execution_date = datetime(2022, 5, 10).date()
+    execution_date = datetime(2022, 5, 13).date()
     for ticker in symbol_list:
         print(f"Checking {ticker} for splits since {execution_date}")
         resp = reference_client.get_stock_splits(ticker, all_pages=True)
