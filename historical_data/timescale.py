@@ -121,7 +121,6 @@ async def get_ticker_data(ticker: str):
         if 'n' in d:
             del d['n']
     resp = [{'v': d['v'], 'vw': d['vw'], 'o': d['o'], 'c': d['c'], 'h': d['h'], 'l': d['l'], 't': d['t'], 'op': d['op']} for d in resp]
-    # resp = {dicid + k: v for dic, dicid in ((_dic, _dic['id'] + '_') for _dic in resp) for k, v in dic.items() if k != 'id'}
     for d in resp:
         d['tick_volume'] = d.pop('v')
         d['tick_vwap'] = d.pop('vw')
