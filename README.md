@@ -1,4 +1,4 @@
-# Market Maker Lite Polygon Repository
+# NautilusTrader Polygon Repository
 [![Python Badge](https://img.shields.io/badge/made%20with-python-blue.svg)]()
 [![GitHub license](https://badgen.net/github/license/MarketMakerLite/polygon)](https://github.com/MarketMakerLite/polygon/blob/master/LICENSE)
 [![GitHub last commit](https://img.shields.io/github/last-commit/MarketMakerLite/polygon)](https://github.com/MarketMakerLite/polygon/commits/main)
@@ -7,7 +7,7 @@
 A repository of code that interacts with the [Polygon API by pssolanki111](https://github.com/pssolanki111/polygon)
 
 ## Websockets
-The websocket files send data to a Redis list, which is then consumed through the listener script - saving the data in chunks to a postgres database. 
+The websocket files send data to a Redis list, which is then consumed through the listener script - saving the data in chunks to a NautilusTrader parquet catalog.
 
 ### crypto_stream.py
 This script streams aggregated minutely bars for all crypto pairs available on Polygon. This data is fed to a Redis list to be consumed by the listener script. 
