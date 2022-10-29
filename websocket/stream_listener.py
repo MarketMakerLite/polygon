@@ -2,8 +2,8 @@ import datetime
 import os
 import redis
 import time
-import psycopg2
-from psycopg2 import pool
+# import psycopg2
+# from psycopg2 import pool
 import json
 import io
 import csv

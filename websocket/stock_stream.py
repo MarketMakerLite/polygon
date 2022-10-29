@@ -13,11 +13,10 @@ import json
 print("starting stream...")
 key = config.polygon_key
 
-
 def connections():
-    # redis_pool = redis.ConnectionPool(host=config.redis_host, port=config.redis_port, db=0, password=config.redis_pw)
-    redis_pool = redis.ConnectionPool(connection_class=redis.UnixDomainSocketConnection, path="/var/run/redis/redis-server.sock",
-                                      password=config.redis_pw, db=0)
+    redis_pool = redis.ConnectionPool(host=config.redis_host, port=config.redis_port, db=0, password=config.redis_pw)
+    # redis_pool = redis.ConnectionPool(connection_class=redis.UnixDomainSocketConnection, path="/var/run/redis/redis-server.sock",
+    #                                   password=config.redis_pw, db=0)
     r = redis.Redis(connection_pool=redis_pool, charset="utf-8", decode_responses=True)
     print('redis connected', r)
     return r
@@ -68,6 +67,7 @@ def save_data(message):
 
 
 def my_custom_process_message(ws, msg):
+    print(msg)
     message = json.loads(msg)
     if message[0]['ev'] != 'status':
         threading.Thread(target=save_data, args=[message]).start()
@@ -84,13 +84,14 @@ def my_custom_close_handler(ws, close_code, close_msg):
 
 
 def main():
-    my_client = polygon.StreamClient(key, polygon.enums.StreamCluster('stocks'), on_message=my_custom_process_message,
-                                     on_close=my_custom_close_handler, on_error=my_custom_error_handler)
+    my_client = polygon.StreamClient(key, polygon.enums.StreamCluster('stocks'), host='delayed.polygon.io'
+                                     , on_message=my_custom_process_message, on_close=my_custom_close_handler
+                                     , on_error=my_custom_error_handler)
     # my_client = polygon.StreamClient(key, polygon.enums.StreamCluster('crypto'), on_message=my_custom_process_message,
     #                                  on_close=my_custom_close_handler, on_error=my_custom_error_handler)
     try:
         my_client.start_stream_thread()
-        my_client.subscribe_stock_second_aggregates()
+        my_client.subscribe_stock_second_aggregates(symbols=['SPCE'])
         # my_client.subscribe_crypto_minute_aggregates()
         # my_client.subscribe_stock_trades()
     except Exception:

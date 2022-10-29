@@ -1,6 +1,6 @@
 import traceback
 import pandas as pd
-from sqlalchemy import create_engine, text
+# from sqlalchemy import create_engine, text
 from datetime import datetime, date, timedelta
 import time
 import config
@@ -8,17 +8,18 @@ from polygon import StocksClient
 from typing import Iterator, Optional
 import io
 import asyncio
-import asyncpg
+# import asyncpg
 import json
 from itertools import dropwhile
 # import uvloop  # Unix only
 
 stock_cols = ['symbol', 'tick_volume', 'total_volume', 'opening_price', 'tick_vwap', 'tick_open', 'tick_close', 'tick_high', 'tick_low', 'vwap', 'avg_trade_size', 'time_beg', 'time_end', 'tdate', 'save_date']
-engine = create_engine(config.psql)
+# engine = create_engine(config.psql)
 key = config.polygon_key
 stocks_client = StocksClient(key, True, read_timeout=60)     # Async client
-symbols_df = pd.read_sql_query('select ticker from companies where active = true', con=engine)
-symbols = symbols_df['ticker'].to_list()
+# symbols_df = pd.read_sql_query('select ticker from companies where active = true', con=engine)
+# symbols = symbols_df['ticker'].to_list()
+symbols = ['SPCE']
 
 # Restart at a specific ticker
 # elem = 'EEV'
@@ -37,11 +38,12 @@ def unix_convert(ts):
         return tdate
 
 
+"""
 async def sql_fun(data, conn):
     sio = [tuple(d.values()) for d in data]
     await conn.copy_records_to_table('stockdata_hist', records=sio, columns=stock_cols)
     del sio
-
+"""
 
 async def get_ticker_data(ticker: str, start_date, end_date):
     # Make API Call
@@ -81,24 +83,27 @@ async def get_ticker_data(ticker: str, start_date, end_date):
 
 
 async def main():
-    pool = await asyncpg.create_pool(host=config.psql_host, database=config.psql_db, user=config.psql_user, password=config.psql_pw)
+    # pool = await asyncpg.create_pool(host=config.psql_host, database=config.psql_db, user=config.psql_user, password=config.psql_pw)
     print(f"Getting data for {len(symbols)} symbols")
     counter = 0
     times_list = []
-    table_name = 'stockdata_hist'
-    job_id = pd.read_sql_query(f"""SELECT s.job_id
-            FROM timescaledb_information.jobs j
-            INNER JOIN timescaledb_information.job_stats s ON j.job_id = s.job_id
-            WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = '{table_name}'; """, con=engine)
-    job_id = job_id['job_id'][0]
-    print(job_id)
-    conn = await pool.acquire()
-    await conn.execute(f"""SELECT alter_job({job_id}, scheduled => false);""")
-    await pool.release(conn)
+
+    # table_name = 'stockdata_hist'
+    # job_id = pd.read_sql_query(f"""SELECT s.job_id
+    #         FROM timescaledb_information.jobs j
+    #         INNER JOIN timescaledb_information.job_stats s ON j.job_id = s.job_id
+    #         WHERE j.proc_name = 'policy_compression' AND s.hypertable_name = '{table_name}'; """, con=engine)
+    # job_id = job_id['job_id'][0]
+    # print(job_id)
+    # conn = await pool.acquire()
+    # await conn.execute(f"""SELECT alter_job({job_id}, scheduled => false);""")
+    # await pool.release(conn)
+
     list_len = 20
     symbols_list = [symbols[x:x + list_len] for x in range(0, len(symbols), list_len)]
-    start_date = date(2003, 1, 1)
-    end_date = date(2022, 6, 16)
+    # start_date = date(2003, 1, 1)
+    start_date = date(2022, 6, 15)
+    end_date = date(2022, 6, 26)
     subset = 2
     end_date1 = start_date + (end_date - start_date) / subset
     for i in range(1, subset):
@@ -125,9 +130,16 @@ async def main():
                 # Save to database
                 print(f"Saving to database")
                 t2 = time.time()
+
+                sio = [tuple(d.values()) for d in df]
+                sio
+                del sio
+
+                """
                 conn = await pool.acquire()
                 await sql_fun(df, conn)
                 await pool.release(conn)
+                """
                 print("sql time: ", time.time()-t2)
                 print("Average: ", (sum(times_list) / len(times_list)))  # Time it
             print('Updating dates')
@@ -136,21 +148,28 @@ async def main():
             end_date1 = end_date
             print(start_date, end_date1)
             print('Running compression')
-            conn = await pool.acquire()
-            await conn.execute(f"""CALL run_job({job_id});""")
-            await pool.release(conn)
+
+            # conn = await pool.acquire()
+            # await conn.execute(f"""CALL run_job({job_id});""")
+            # await pool.release(conn)
+
         except Exception as e:
             print(e)
             traceback.print_exc()
             pass
     print("Turning On Compression Policy")
-    conn = await pool.acquire()
-    await conn.execute(f"""SELECT alter_job({job_id}, scheduled => true);""")
-    await pool.release(conn)
+
+    # conn = await pool.acquire()
+    # await conn.execute(f"""SELECT alter_job({job_id}, scheduled => true);""")
+    # await pool.release(conn)
+    await stocks_client.close()
+
     return
 
 
 if __name__ == '__main__':
     # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # Unix only
     asyncio.run(main())
-    stocks_client.close()
+
+    # loop.run_until_complete(loop.create_task(stocks_client.close()))
+    # loop.run_until_complete(self.loop.create_task(self._websocket.close()))
