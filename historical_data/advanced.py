@@ -1,5 +1,7 @@
 import traceback
-import pandas as pd
+# from csv import writer
+from csv import DictWriter
+# import pandas as pd
 # from sqlalchemy import create_engine, text
 from datetime import datetime, date, timedelta
 import time
@@ -19,7 +21,7 @@ key = config.polygon_key
 stocks_client = StocksClient(key, True, read_timeout=60)     # Async client
 # symbols_df = pd.read_sql_query('select ticker from companies where active = true', con=engine)
 # symbols = symbols_df['ticker'].to_list()
-symbols = ['SPCE']
+symbols = ['TSLA', 'AMZN']
 
 # Restart at a specific ticker
 # elem = 'EEV'
@@ -47,7 +49,7 @@ async def sql_fun(data, conn):
 
 async def get_ticker_data(ticker: str, start_date, end_date):
     # Make API Call
-    resp = await stocks_client.get_aggregate_bars(ticker, start_date, end_date, full_range=True, timespan='minute', high_volatility=True, warnings=False, adjusted=True)
+    resp = await stocks_client.get_aggregate_bars(symbol=ticker, from_date=start_date, to_date=end_date, full_range=True, timespan='minute', high_volatility=True, warnings=False, adjusted=True)
     for d in resp:
         d.setdefault('a')
         d.setdefault('op')
@@ -102,10 +104,15 @@ async def main():
     list_len = 20
     symbols_list = [symbols[x:x + list_len] for x in range(0, len(symbols), list_len)]
     # start_date = date(2003, 1, 1)
-    start_date = date(2022, 6, 15)
-    end_date = date(2022, 6, 26)
+    start_date = date(2021, 1, 1)
+    end_date = date(2021, 12, 31)
     subset = 2
     end_date1 = start_date + (end_date - start_date) / subset
+
+    field_names = ['symbol', 'tick_volume', 'total_volume', 'opening_price', 'tick_vwap', 'tick_open',
+                   'tick_close', 'tick_high', 'tick_low', 'vwap', 'avg_trade_size', 'time_beg',
+                   'time_end', 'tdate', 'save_date']
+
     for i in range(1, subset):
         print(start_date, end_date1)
         try:
@@ -121,19 +128,41 @@ async def main():
                         print(f"Getting data for {ticker}")
                         new = await get_ticker_data(ticker, start_date, end_date1)
                         print("Time to data:", time.time()-t3)
-                        df = df + new
+
+                        with open(f'C:\Repos\polygon_nautilus\.data\{ticker}.csv', 'a') as f_object:
+                            dictwriter_object = DictWriter(f_object, fieldnames=field_names)
+                            for d in new:
+                                dictwriter_object.writerow(d)
+                            f_object.close()
+
+                        # df = df + new
                         times_list.append((time.time() - t))
                     except Exception as e:
                         print(e)
                         traceback.print_exc()
                         pass
                 # Save to database
-                print(f"Saving to database")
+                print(f"Saving to csv")
                 t2 = time.time()
 
-                sio = [tuple(d.values()) for d in df]
-                sio
-                del sio
+               # sio = [tuple(d.values()) for d in df]
+
+                # with open(f'C:\Repos\polygon_nautilus\data\{ticker}.csv', 'a') as f_object:
+                    # Pass the file object and a list
+                    # of column names to DictWriter()
+                    # You will get a object of DictWriter
+                    # dictwriter_object = DictWriter(f_object, fieldnames=field_names)
+                    # dictwriter_object = DictWriter(f_object)
+
+                    # Pass the dictionary as an argument to the Writerow()
+                    # for d in df
+                    #     dictwriter_object.writerow(d)
+
+                    # Close the file object
+                    # f_object.close()
+
+                # sio
+                # del sio
 
                 """
                 conn = await pool.acquire()
@@ -147,7 +176,7 @@ async def main():
             start_date = end_date1 + timedelta(days=1)
             end_date1 = end_date
             print(start_date, end_date1)
-            print('Running compression')
+            # print('Running compression')
 
             # conn = await pool.acquire()
             # await conn.execute(f"""CALL run_job({job_id});""")
@@ -157,7 +186,7 @@ async def main():
             print(e)
             traceback.print_exc()
             pass
-    print("Turning On Compression Policy")
+    # print("Turning On Compression Policy")
 
     # conn = await pool.acquire()
     # await conn.execute(f"""SELECT alter_job({job_id}, scheduled => true);""")
