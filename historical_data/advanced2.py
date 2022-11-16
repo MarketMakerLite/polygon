@@ -7,7 +7,7 @@ from datetime import timezone
 import asyncio
 from nautilus_trader.backtest.data.wranglers import BarDataWrangler
 from nautilus_trader.model.currencies import USD
-from nautilus_trader.model.data.bar import BarType, BarSpecification
+from nautilus_trader.model.data.bar import Bar, BarType, BarSpecification
 from nautilus_trader.model.enums import AssetClass, AggregationSource, BarAggregation, PriceType
 from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.identifiers import Symbol

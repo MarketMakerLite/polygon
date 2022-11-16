@@ -6,6 +6,7 @@ from csv import DictWriter
 from datetime import datetime, date, timedelta
 import time
 import config
+from datetime import timezone
 from polygon import StocksClient
 from typing import Iterator, Optional
 import io
@@ -39,17 +40,21 @@ def unix_convert(ts):
         tdate = datetime.utcfromtimestamp(ts)  # .strftime('%Y-%m-%d %H:%M:%S')
         return tdate
 
-
-"""
-async def sql_fun(data, conn):
-    sio = [tuple(d.values()) for d in data]
-    await conn.copy_records_to_table('stockdata_hist', records=sio, columns=stock_cols)
-    del sio
-"""
-
 async def get_ticker_data(ticker: str, start_date, end_date):
     # Make API Call
-    resp = await stocks_client.get_aggregate_bars(symbol=ticker, from_date=start_date, to_date=end_date, full_range=True, timespan='minute', high_volatility=True, warnings=False, adjusted=True)
+    # Note that while this is calling the routine with await, it is also running parallel threads to pull down
+    # data on lots of network connections. It's unclear the extent to which this will actually yield to other
+    # coroutines during its work. It may be that this operation alone takes all the resources of the machine
+    # making "await" functionally useless
+
+    # start = time.time()
+    print(f"{time.time()}: get_ticker_data: start getting aggregate bars for {ticker}")
+    resp = await stocks_client.get_aggregate_bars(symbol=ticker
+                                                  , from_date=start_date, to_date=end_date, timespan='minute'
+                                                  , full_range=True, run_parallel=True, max_concurrent_workers=8
+                                                  , high_volatility=True, warnings=False, adjusted=True)
+    print(f"{time.time()}: get_ticker_data: done getting aggregate bars for {ticker}")
+
     for d in resp:
         d.setdefault('a')
         d.setdefault('op')
@@ -59,7 +64,8 @@ async def get_ticker_data(ticker: str, start_date, end_date):
             del d['a']
         if 'n' in d:
             del d['n']
-    resp = [{'v': d['v'], 'vw': d['vw'], 'o': d['o'], 'c': d['c'], 'h': d['h'], 'l': d['l'], 't': d['t'], 'op': d['op']} for d in resp]
+    resp = [{'v': d['v'], 'vw': d['vw'], 'o': d['o'], 'c': d['c'], 'h': d['h'], 'l': d['l'], 't': d['t'], 'op': d['op']}
+            for d in resp]
     for d in resp:
         d['tick_volume'] = d.pop('v')
         d['tick_vwap'] = d.pop('vw')
@@ -76,11 +82,14 @@ async def get_ticker_data(ticker: str, start_date, end_date):
         d['time_beg'] = None
         d['tick_volume'] = int(d['tick_volume'])
         d['tdate'] = unix_convert(d['time_end'])
-        d['save_date'] = datetime.utcnow()
-    resp = [{'symbol': d['symbol'], 'tick_volume': d['tick_volume'], 'total_volume': d['total_volume'], 'opening_price': d['opening_price'],
-             'tick_vwap': d['tick_vwap'], 'tick_open': d['tick_open'], 'tick_close': d['tick_close'], 'tick_high': d['tick_high'],
-             'tick_low': d['tick_low'], 'vwap': d['vwap'], 'avg_trade_size': d['avg_trade_size'], 'time_beg': d['time_beg'],
-             'time_end': d['time_end'], 'tdate': d['tdate'], 'save_date': d['save_date']} for d in resp]
+        d['save_date'] = datetime.now(timezone.utc)
+    resp = [{ 'symbol': d['symbol'], 'tick_volume': d['tick_volume'], 'total_volume': d['total_volume']
+            , 'opening_price': d['opening_price'], 'tick_vwap': d['tick_vwap'], 'tick_open': d['tick_open']
+            , 'tick_close': d['tick_close'], 'tick_high': d['tick_high'], 'tick_low': d['tick_low']
+            , 'vwap': d['vwap'], 'avg_trade_size': d['avg_trade_size'], 'time_beg': d['time_beg']
+            , 'time_end': d['time_end'], 'tdate': d['tdate'], 'save_date': d['save_date']} for d in resp]
+    print(f"{time.time()}: get_ticker_data: done formatting aggregate bars dictionary response for {ticker}")
+
     return resp
 
 
