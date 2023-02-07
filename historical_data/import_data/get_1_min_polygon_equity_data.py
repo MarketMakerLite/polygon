@@ -22,14 +22,14 @@ from nautilus_trader.persistence.external.core import write_objects
 from polygon import StocksClient
 from polygon import ReferenceClient
 
-key = config.key
+key = config.polygon_key
 
 
 def unix_convert(ts):
     if len(str(ts)) == 13:
-        ts = int(ts/1000)
+        ts = int(ts / 1000)
     elif len(str(ts)) == 19:
-        ts = int(ts/1000000000)
+        ts = int(ts / 1000000000)
     else:
         raise TypeError(f'timestamp length {len(str(ts))} was not 13 or 19')
 
@@ -64,7 +64,7 @@ async def get_bar_data(stocks_client, ticker: str, start_date, end_date):
         d['bar_time_start'] = d.pop('t')
         d['symbol'] = ticker
         d['bar_volume'] = int(d['bar_volume'])
-        d['timestamp'] = unix_convert(d['bar_time_start'])
+        d['timestamp'] = unix_convert(d['bar_time_start'] * 1000000 + 59999999999)  # add 1 minute -1 nanoseconds
         d['save_date'] = datetime.now(timezone.utc)
 
     resp = [{'symbol': d['symbol'], 'bar_time_start': d['bar_time_start'], 'open': d['bar_open'], 'high': d['bar_high'],
@@ -91,7 +91,7 @@ def generic_equity(ticker_symbol: str, ticker_venue: str, currency, cik) -> Equi
 
 
 def get_polygon_key():
-    return config.key
+    return config.polygon_key
 
 
 def ticker_factory():
@@ -102,7 +102,7 @@ def ticker_factory():
         tickers = ref_client.get_tickers(market='stocks', all_pages=True, merge_all_pages=True)
         # filter here if you are just testing, or need to skip symbols
         # tickers = [d for d in tickers if d['ticker'] in symbols]
-        tickers = [d for d in tickers if d['ticker'] > 'XLY']
+        tickers = [d for d in tickers if d['ticker'] == 'QQQ']
         print("Tickers retrieved")
         return tickers
     finally:
@@ -113,7 +113,7 @@ async def main():
     stocks_client = StocksClient(get_polygon_key(), use_async=True, read_timeout=120)
 
     try:
-        catalog_path = "X:/Data/Polygon/Nautilus"
+        catalog_path = "C:/Data/Polygon/1_min_bar"
         catalog = ParquetDataCatalog(catalog_path)
         start_date = date(2000, 1, 1)
         end_date = date(2022, 11, 13)
@@ -170,7 +170,7 @@ async def main():
                         AggregationSource.EXTERNAL,  # Bars are aggregated in the data already
                     )
                     wrangler = BarDataWrangler(bar_type, instrument)
-                    ticks = wrangler.process(data=df[['open', 'high', 'low', 'close', 'volume']])
+                    ticks = wrangler.process(data=df[['open', 'high', 'low', 'close', 'volume']], ts_init_delta=1)
                     # print("Time to wrangle:", time.time() - t)
 
                     # t = time.time()
@@ -180,7 +180,8 @@ async def main():
                 except Exception as e:
                     print(e)
                     traceback.print_exc()
-                    print(f"ERROR:: Bugger, couldn't create bar_type, wrangler, ticks, or commit. Ah well, sally forth!")
+                    print(
+                        f"ERROR:: Bugger, couldn't create bar_type, wrangler, ticks, or commit. Ah well, sally forth!")
                     continue
             else:
                 print(f"No data for {ticker['ticker']}, carrying on")
