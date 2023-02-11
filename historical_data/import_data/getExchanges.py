@@ -3,7 +3,7 @@ import aiohttp
 
 async def get_exchanges():
     # Replace YOUR_API_KEY with your actual API key
-    API_KEY = "ipWaWpJ9fdx_tsglcFa4nYjYBsaLc9op"
+    API_KEY = "insertyourAPIkeyhere"
 
     # Set the base URL for the Polygon API
     BASE_URL = "https://api.polygon.io"

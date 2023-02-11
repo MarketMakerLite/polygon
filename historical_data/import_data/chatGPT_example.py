@@ -67,4 +67,4 @@ def download_and_write_data(dates, api_key):
 dates = ['2022-01-01', '2022-01-02', '2022-01-03']
 
 # Download and write data using parallel asynchronous threads
-download_and_write_data(dates, 'ipWaWpJ9fdx_tsglcFa4nYjYBsaLc9op')
+download_and_write_data(dates, 'insertyourAPIkeyhere')

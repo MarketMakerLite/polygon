@@ -13,7 +13,7 @@ import json
 
 async def download_trade_data(symbol: str, date: str, session: aiohttp.ClientSession) -> Dict[str, Any]:
     # Replace YOUR_API_KEY with your actual API key
-    API_KEY = "ipWaWpJ9fdx_tsglcFa4nYjYBsaLc9op"
+    API_KEY = "insertyourAPIkeyhere"
 
     # Set the headers for the request
     headers = {
