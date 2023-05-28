@@ -109,6 +109,18 @@ data = [
     [2007, 'U.S.', 'Thanksgiving', 'Friday, November 23, 2007', '2:00 pm EST', ''],
     [2007, 'U.S.', 'Christmas', 'Monday, December 24, 2007', '2:00 pm EST', 'Tuesday, December 25, 2007'],
     [2007, 'U.S.', 'New Year\'s Day 2008', 'Monday, December 31, 2007', '2:00 pm EST', '']
+    [2015, 'U.S.', 'New Year\'s Day 2015', 'Wednesday, December 31, 2014', '2:00 pm EST', 'Thursday, January 1, 2015'],
+    [2015, 'U.S.', 'Martin Luther King Day', '', '', 'Monday, January 19, 2015'],
+    [2015, 'U.S.', 'President’s Day', '', '', 'Monday, February 16, 2015'],
+    [2015, 'U.S.', 'Good Friday', 'Thursday, April 2, 2015', '2:00 pm EST', 'Friday, April 3, 2015'],
+    [2015, 'U.S.', 'Memorial Day', 'Friday, May 22, 2015', '2:00 pm EST', 'Monday, May 25, 2015'],
+    [2015, 'U.S.', 'Independence Day', 'Thursday, July 2, 2015', '2:00 pm EST', 'Friday, July 3, 2015'],
+    [2015, 'U.S.', 'Labor Day', '', '', 'Monday, September 7, 2015'],
+    [2015, 'U.S.', 'Columbus Day', '', '', 'Monday, October 12, 2015'],
+    [2015, 'U.S.', 'Veterans Day', '', '', 'Wednesday, November 11, 2015'],
+    [2015, 'U.S.', 'Thanksgiving', 'Friday, November 27, 2015', '2:00 pm EST', 'Thursday, November 26, 2015'],
+    [2015, 'U.S.', 'Christmas', 'Thursday, December 24, 2015', '2:00 pm EST', 'Friday, December 25, 2015'],
+    [2015, 'U.S.', 'New Year\'s Day 2016', 'Thursday, December 31, 2015', '2:00 pm EST', 'Friday, January 1, 2016']
 ]
 
 
