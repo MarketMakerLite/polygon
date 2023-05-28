@@ -19,7 +19,7 @@ from itertools import dropwhile
 stock_cols = ['symbol', 'tick_volume', 'total_volume', 'opening_price', 'tick_vwap', 'tick_open', 'tick_close', 'tick_high', 'tick_low', 'vwap', 'avg_trade_size', 'time_beg', 'time_end', 'tdate', 'save_date']
 # engine = create_engine(config.psql)
 key = config.polygon_key
-stocks_client = StocksClient(key, True, read_timeout=60)     # Async client
+stocks_client = StocksClient(api_key=key, use_async=True, read_timeout=60)     # Async client
 # symbols_df = pd.read_sql_query('select ticker from companies where active = true', con=engine)
 # symbols = symbols_df['ticker'].to_list()
 symbols = ['TSLA', 'AMZN']
