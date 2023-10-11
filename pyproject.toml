@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-nautilus_trader = "^1.178.0"
+nautilus_trader = {path = "/home/codespace/nautilus_trader"}
 polygon = "^1.1.2"
 black = "^23.9.1"
 flake8 = "^6.1.0"

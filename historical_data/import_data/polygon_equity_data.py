@@ -10,7 +10,6 @@ from polygon import StocksClient
 from polygon import ReferenceClient
 from nautilus_trader.model.currencies import USD
 from nautilus_trader.persistence.wranglers import BarDataWrangler
-from nautilus_trader.model.currencies import USD
 from nautilus_trader.model.data.bar import BarType, BarSpecification
 from nautilus_trader.model.enums import (
     AggregationSource,
@@ -24,7 +23,6 @@ from nautilus_trader.model.instruments.equity import Equity
 from nautilus_trader.model.objects import Price
 from nautilus_trader.model.objects import Quantity
 from nautilus_trader.persistence.catalog import ParquetDataCatalog
-from nautilus_trader.persistence.external.core import write_objects
 
 
 class PolygonEquityData:
@@ -90,7 +88,7 @@ class PolygonEquityData:
             instrument = self.create_nautilus_equity(
                 ticker["ticker"], ticker["primary_exchange"], str(ticker["cik"]), USD
             )
-            write_objects(catalog, [instrument])
+            catalog.write_data([instrument])
             df = pd.DataFrame(ticker_data)
             df.set_index("timestamp", inplace=True)
             bar_type = BarType(
@@ -103,7 +101,7 @@ class PolygonEquityData:
                 data=df[["open", "high", "low", "close", "volume"]], ts_init_delta=1
             )
             logging.info(f"saving {ticker['ticker']} data to catalog")
-            write_objects(catalog, bars)
+            catalog.write_data(bars)
         stocks_client.close()
 
     def get_bar_data_for_single_ticker(
@@ -239,8 +237,15 @@ class PolygonEquityData:
             raise TypeError(f"timestamp length {len(str(ts))} was not 13 or 19")
         return datetime.utcfromtimestamp(ts)
 
-    def read_catalog_data(self, start=None, end=None):
-        """read catalog data and return a dataframe
+    def read_catalog_instruments(self, **kwargs):
+        """read instruments from catalog"""
+        logging.info(f"reading instruments from {self.catalog_path}")
+        catalog = ParquetDataCatalog(self.catalog_path)
+        instruments = catalog.instruments(**kwargs)
+        return instruments
+
+    def read_catalog_bars(self, start=None, end=None):
+        """read catalog bars
 
         Args:
             start (date, optional): Defaults to None.
@@ -249,7 +254,7 @@ class PolygonEquityData:
         Returns:
             dataframe: pandas dataframe containing bar data
         """
-        logging.info(f"reading data from {self.catalog_path}")
+        logging.info(f"reading bars from {self.catalog_path}")
         catalog = ParquetDataCatalog(self.catalog_path)
         bars = catalog.bars(start=start, end=end)
         return bars
